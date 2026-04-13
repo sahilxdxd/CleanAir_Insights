@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Predict AQI • CleanAir Insights</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <nav class="navbar soft-nav">
+        <div class="container-fluid px-3 px-lg-4">
+            <a class="navbar-brand d-flex align-items-center gap-3" href="/">
+                <span class="brand-mark">AQ</span>
+                <span class="fw-bold">CleanAir Insights</span>
+            </a>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <a href="/dashboard" class="btn btn-ghost-modern btn-sm"><i class="bi bi-speedometer2 me-1"></i>Dashboard</a>
+                <a href="/logout" class="btn btn-danger-modern btn-sm"><i class="bi bi-box-arrow-right me-1"></i>Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="page-shell prediction-layout">
+        <section class="surface-card prediction-panel mb-4">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                <div>
+                    <span class="page-kicker"><i class="bi bi-activity"></i> AQI prediction</span>
+                    <h1 class="section-title display-6 mt-3 mb-2">Check air quality for a city or an exact location</h1>
+                    <p class="lead-copy mb-0">
+                        Start with simple mode. Switch to expert mode only if you need manual pollutant values.
+                    </p>
+                </div>
+
+                <div class="toggle-group" aria-label="Prediction mode">
+                    <button type="button" id="simpleBtn" class="toggle-btn active">Simple mode</button>
+                    <button type="button" id="advancedBtn" class="toggle-btn">Switch to Advanced Mode</button>
+                </div>
+            </div>
+
+            <div class="row g-4 mt-1">
+                <div class="col-lg-7">
+                    <form id="form" class="form-panel p-4 mt-2">
+                        <input type="hidden" id="modeInput" name="mode" value="simple">
+
+                        <div id="simpleSection">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="input-label" for="city">
+                                        City
+                                        <span class="info-pill" data-bs-toggle="tooltip" data-bs-title="Choose the main city you want to check.">i</span>
+                                    </label>
+                                    <input id="city" name="city" class="form-control" list="cityList" placeholder="Search or select a city">
+                                    <datalist id="cityList">
+                                        <option value="Delhi"></option>
+                                        <option value="Chandigarh"></option>
+                                        <option value="Mumbai"></option>
+                                        <option value="Kolkata"></option>
+                                        <option value="Bangalore"></option>
+                                        <option value="Bengaluru"></option>
+                                        <option value="Chennai"></option>
+                                        <option value="Hyderabad"></option>
+                                        <option value="Pune"></option>
+                                        <option value="Jaipur"></option>
+                                        <option value="Lucknow"></option>
+                                    </datalist>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="input-label" for="place">
+                                        Place / Area
+                                        <span class="info-pill" data-bs-toggle="tooltip" data-bs-title="Enter a local area, neighborhood, or landmark for a more specific result.">i</span>
+                                    </label>
+                                    <input id="place" name="place" class="form-control" list="placeList" placeholder="Example: Connaught Place">
+                                    <datalist id="placeList">
+                                        <option value="Connaught Place"></option>
+                                        <option value="Sector 17"></option>
+                                        <option value="Andheri East"></option>
+                                        <option value="Salt Lake"></option>
+                                        <option value="Indiranagar"></option>
+                                        <option value="Koramangala"></option>
+                                        <option value="Karol Bagh"></option>
+                                        <option value="Bandra"></option>
+                                    </datalist>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="input-label" for="state">
+                                        State
+                                        <span class="info-pill" data-bs-toggle="tooltip" data-bs-title="Select the state or region connected to the location.">i</span>
+                                    </label>
+                                    <select id="state" name="state" class="form-select">
+                                        <option value="">Select state</option>
+                                        <option>Delhi</option>
+                                        <option>Punjab</option>
+                                        <option>Haryana</option>
+                                        <option>Maharashtra</option>
+                                        <option>West Bengal</option>
+                                        <option>Karnataka</option>
+                                        <option>Tamil Nadu</option>
+                                        <option>Telangana</option>
+                                        <option>Uttar Pradesh</option>
+                                        <option>Gujarat</option>
+                                        <option>Rajasthan</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="input-label" for="dateMode">
+                                        Date
+                                        <span class="info-pill" data-bs-toggle="tooltip" data-bs-title="Use the current day or choose a date for the check.">i</span>
+                                    </label>
+                                    <div class="d-flex gap-2">
+                                        <button type="button" class="btn btn-secondary-modern flex-fill active" id="currentChoice">Current</button>
+                                        <button type="button" class="btn btn-ghost-modern flex-fill" id="dateChoiceBtn">Pick date</button>
+                                    </div>
+                                    <input type="hidden" id="dateMode" name="dateMode" value="current">
+                                    <input type="date" id="dateValue" name="dateValue" class="form-control mt-2 d-none">
+                                </div>
+                            </div>
+
+                            <div class="surface-card-strong p-3 mt-4">
+                                <div class="d-flex gap-2 align-items-start">
+                                    <i class="bi bi-info-circle text-primary fs-5 mt-1"></i>
+                                    <div>
+                                        <div class="fw-bold mb-1">Simple mode note</div>
+                                        <div class="helper-text mb-0">
+                                            For best results, choose your city and place. Technical pollutant values are not required.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="advancedSection" class="hide">
+                            <div class="surface-card-strong p-3 mb-3">
+                                <div class="d-flex gap-2 align-items-start">
+                                    <i class="bi bi-sliders text-primary fs-5 mt-1"></i>
+                                    <div>
+                                        <div class="fw-bold mb-1">Expert mode</div>
+                                        <div class="helper-text mb-0">Manual pollutant input is available for technical users. Each field includes a plain-language hint.</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="input-label">
+                                        PM2.5
+                                        <span class="info-pill" data-bs-toggle="tooltip" data-bs-title="Fine particles that can reach deep into the lungs.">i</span>
+                                    </label>
+                                    <input name="pm25" class="form-control" placeholder="Example: 120">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="input-label">
+                                        PM10
+                                        <span class="info-pill" data-bs-toggle="tooltip" data-bs-title="Larger particles that affect breathing and visibility.">i</span>
+                                    </label>
+                                    <input name="pm10" class="form-control" placeholder="Example: 180">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="input-label">
+                                        NO2
+                                        <span class="info-pill" data-bs-toggle="tooltip" data-bs-title="A traffic-related gas that can irritate the airways.">i</span>
+                                    </label>
+                                    <input name="no2" class="form-control" placeholder="Example: 60">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="input-label">
+                                        SO2
+                                        <span class="info-pill" data-bs-toggle="tooltip" data-bs-title="A gas linked to industrial emissions and burning fuel.">i</span>
+                                    </label>
+                                    <input name="so2" class="form-control" placeholder="Example: 35">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="input-label">
+                                        CO
+                                        <span class="info-pill" data-bs-toggle="tooltip" data-bs-title="A poisonous gas from incomplete combustion.">i</span>
+                                    </label>
+                                    <input name="co" class="form-control" placeholder="Example: 6">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="input-label">
+                                        O3
+                                        <span class="info-pill" data-bs-toggle="tooltip" data-bs-title="Ground-level ozone can trigger breathing irritation.">i</span>
+                                    </label>
+                                    <input name="o3" class="form-control" placeholder="Example: 90">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="input-label">
+                                        Temperature
+                                        <span class="info-pill" data-bs-toggle="tooltip" data-bs-title="Outdoor temperature can influence pollution build-up.">i</span>
+                                    </label>
+                                    <input name="temperature" class="form-control" placeholder="Example: 28">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="input-label">
+                                        Humidity
+                                        <span class="info-pill" data-bs-toggle="tooltip" data-bs-title="Humidity is the amount of moisture in the air.">i</span>
+                                    </label>
+                                    <input name="humidity" class="form-control" placeholder="Example: 65">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex flex-wrap gap-2 mt-4">
+                            <button class="btn btn-modern btn-primary-modern" type="submit">
+                                <i class="bi bi-search me-2"></i>Get AQI
+                            </button>
+                            <button class="btn btn-modern btn-secondary-modern" type="button" id="clearBtn">
+                                <i class="bi bi-arrow-counterclockwise me-2"></i>Clear
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="col-lg-5">
+                    <div class="preview-card p-4 h-100">
+                        <span class="page-kicker"><i class="bi bi-chat-square-heart"></i> Result preview</span>
+                        <div id="emptyState" class="mt-4">
+                            <h3 class="section-title h4 mb-3">Your AQI result will appear here</h3>
+                            <p class="helper-text mb-0">
+                                Submit a city or expert pollutant values to see a structured AQI result with practical advice.
+                            </p>
+                        </div>
+
+                        <div id="resultBox" class="hide mt-4">
+                            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                                <div>
+                                    <div class="fw-bold fs-4" id="locationTitle">Selected location</div>
+                                    <div class="helper-text mt-1" id="locationMeta"></div>
+                                </div>
+                                <div class="text-end">
+                                    <div class="aqi-pill" id="statusPill">AQI</div>
+                                    <div class="helper-text mt-2" id="scoreLabel"></div>
+                                </div>
+                            </div>
+
+                            <div class="mt-4">
+                                <div class="result-grid">
+                                    <div class="result-card">
+                                        <h5><i class="bi bi-clipboard2-pulse me-2"></i>AQI Status</h5>
+                                        <div class="fw-bold fs-4" id="statusText"></div>
+                                        <div class="helper-text mt-2" id="summaryText"></div>
+                                    </div>
+                                    <div class="result-card">
+                                        <h5><i class="bi bi-heart-pulse me-2"></i>Health Risks</h5>
+                                        <ul class="bullet-list" id="healthRisks"></ul>
+                                    </div>
+                                    <div class="result-card">
+                                        <h5><i class="bi bi-exclamation-triangle me-2"></i>Precautions</h5>
+                                        <ul class="bullet-list" id="precautions"></ul>
+                                    </div>
+                                    <div class="result-card">
+                                        <h5><i class="bi bi-bag-heart me-2"></i>Care / Recommendations</h5>
+                                        <ul class="bullet-list" id="recommendations"></ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="errorBox" class="alert alert-danger d-none mt-4 mb-0"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const form = document.getElementById("form");
+        const modeInput = document.getElementById("modeInput");
+        const simpleSection = document.getElementById("simpleSection");
+        const advancedSection = document.getElementById("advancedSection");
+        const simpleBtn = document.getElementById("simpleBtn");
+        const advancedBtn = document.getElementById("advancedBtn");
+        const clearBtn = document.getElementById("clearBtn");
+        const currentChoice = document.getElementById("currentChoice");
+        const dateChoiceBtn = document.getElementById("dateChoiceBtn");
+        const dateModeInput = document.getElementById("dateMode");
+        const dateValue = document.getElementById("dateValue");
+        const resultBox = document.getElementById("resultBox");
+        const emptyState = document.getElementById("emptyState");
+        const errorBox = document.getElementById("errorBox");
+        const locationTitle = document.getElementById("locationTitle");
+        const locationMeta = document.getElementById("locationMeta");
+        const statusPill = document.getElementById("statusPill");
+        const scoreLabel = document.getElementById("scoreLabel");
+        const statusText = document.getElementById("statusText");
+        const summaryText = document.getElementById("summaryText");
+        const healthRisks = document.getElementById("healthRisks");
+        const precautions = document.getElementById("precautions");
+        const recommendations = document.getElementById("recommendations");
+        const cityInput = document.getElementById("city");
+
+        function setMode(mode) {
+            const isAdvanced = mode === "advanced";
+            modeInput.value = mode;
+            simpleSection.classList.toggle("hide", isAdvanced);
+            advancedSection.classList.toggle("hide", !isAdvanced);
+            simpleBtn.classList.toggle("active", !isAdvanced);
+            advancedBtn.classList.toggle("active", isAdvanced);
+            cityInput.required = false;
+        }
+
+        function setDateMode(mode) {
+            const isDate = mode === "date";
+            dateModeInput.value = mode;
+            currentChoice.classList.toggle("btn-secondary-modern", !isDate);
+            currentChoice.classList.toggle("btn-ghost-modern", isDate);
+            dateChoiceBtn.classList.toggle("btn-secondary-modern", isDate);
+            dateChoiceBtn.classList.toggle("btn-ghost-modern", !isDate);
+            dateValue.classList.toggle("d-none", !isDate);
+            dateValue.required = isDate;
+            if (!isDate) {
+                dateValue.value = "";
+            }
+        }
+
+        function fillList(target, items) {
+            target.innerHTML = "";
+            const list = Array.isArray(items) ? items : [];
+            if (!list.length) {
+                const li = document.createElement("li");
+                li.textContent = "No items available.";
+                target.appendChild(li);
+                return;
+            }
+            list.forEach((item) => {
+                const li = document.createElement("li");
+                li.textContent = item;
+                target.appendChild(li);
+            });
+        }
+
+        function setPill(status) {
+            const raw = String(status || "Unknown");
+            const key = raw.toLowerCase().replace(/\s+/g, "-");
+            statusPill.className = `aqi-pill aqi-${key}`;
+            statusPill.textContent = raw;
+        }
+
+        function resetResult() {
+            resultBox.classList.add("hide");
+            emptyState.classList.remove("hide");
+            errorBox.classList.add("d-none");
+            healthRisks.innerHTML = "";
+            precautions.innerHTML = "";
+            recommendations.innerHTML = "";
+        }
+
+        function formatDate(value) {
+            if (!value) return "Current";
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) return "Current";
+            return date.toLocaleString([], {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit"
+            });
+        }
+
+        simpleBtn.addEventListener("click", () => setMode("simple"));
+        advancedBtn.addEventListener("click", () => setMode("advanced"));
+        currentChoice.addEventListener("click", () => setDateMode("current"));
+        dateChoiceBtn.addEventListener("click", () => setDateMode("date"));
+
+        clearBtn.addEventListener("click", () => {
+            form.reset();
+            setMode("simple");
+            setDateMode("current");
+            resetResult();
+        });
+
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            errorBox.classList.add("d-none");
+            emptyState.classList.add("hide");
+
+            const payload = Object.fromEntries(new FormData(form).entries());
+            payload.mode = modeInput.value;
+            payload.dateMode = dateModeInput.value;
+
+            if (payload.dateMode !== "date") {
+                payload.dateValue = "";
+            }
+
+            Object.keys(payload).forEach((key) => {
+                if (typeof payload[key] === "string") payload[key] = payload[key].trim();
+            });
+
+            try {
+                const res = await fetch("/predict", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json"
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const contentType = res.headers.get("content-type") || "";
+                const data = contentType.includes("application/json") ? await res.json() : { success: false, message: await res.text() };
+
+                if (!res.ok || !data.success) {
+                    throw new Error(data.message || "Prediction failed.");
+                }
+
+                const result = data.result || {};
+                const advice = data.advice || {};
+                const location = data.location || {};
+
+                locationTitle.textContent = location.label || "Selected location";
+                const locationParts = [location.city, location.place, location.state].filter(Boolean);
+                const datePart = location.dateValue ? formatDate(location.dateValue) : "Current";
+                locationMeta.textContent = [
+                    locationParts.length ? locationParts.join(" • ") : "No location entered",
+                    `Date: ${datePart}`
+                ].join(" • ");
+
+                setPill(result.aqiStatus || "Unknown");
+                scoreLabel.textContent = `AQI score: ${result.aqiScore ?? 0}`;
+                statusText.textContent = result.aqiStatus || "Unknown";
+                summaryText.textContent = advice.summary || "Advice generated successfully.";
+
+                fillList(healthRisks, advice.healthRisks);
+                fillList(precautions, advice.precautions);
+                fillList(recommendations, advice.recommendations);
+
+                resultBox.classList.remove("hide");
+            } catch (err) {
+                errorBox.textContent = err.message || "Prediction failed.";
+                errorBox.classList.remove("d-none");
+                emptyState.classList.remove("hide");
+                resultBox.classList.add("hide");
+            }
+        });
+
+        setMode("simple");
+        setDateMode("current");
+
+        document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach((el) => {
+            new bootstrap.Tooltip(el);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard • CleanAir Insights</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <nav class="navbar soft-nav">
+        <div class="container-fluid px-3 px-lg-4">
+            <a class="navbar-brand d-flex align-items-center gap-3" href="/">
+                <span class="brand-mark">AQ</span>
+                <span class="fw-bold">CleanAir Insights</span>
+            </a>
+            <div class="d-flex align-items-center gap-2">
+                <a href="/predict" class="btn btn-ghost-modern btn-sm"><i class="bi bi-activity me-1"></i>Predict</a>
+                <a href="/logout" class="btn btn-danger-modern btn-sm"><i class="bi bi-box-arrow-right me-1"></i>Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="page-shell dashboard-layout">
+        <section class="surface-card hero-panel mb-4">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                <div>
+                    <span class="page-kicker"><i class="bi bi-speedometer2"></i> User dashboard</span>
+                    <h1 class="section-title display-6 mt-3 mb-2" id="welcomeTitle">Welcome back</h1>
+                    <p class="lead-copy mb-0" id="welcomeCopy">
+                        Quickly check air quality, revisit history, or start a new prediction.
+                    </p>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    <span class="soft-chip"><i class="bi bi-shield-check"></i> Secure session</span>
+                    <span class="soft-chip"><i class="bi bi-journal-text"></i> Saved history</span>
+                </div>
+            </div>
+
+            <div class="quick-actions mt-4">
+                <a href="/predict" class="quick-card text-start">
+                    <div class="quick-icon mb-3"><i class="bi bi-geo-alt"></i></div>
+                    <h4 class="h5 section-title">Predict AQI</h4>
+                    <p class="helper-text mb-0">Open the prediction page and choose city, place, or advanced inputs.</p>
+                </a>
+                <a href="#historySection" class="quick-card text-start">
+                    <div class="quick-icon mb-3"><i class="bi bi-clock-history"></i></div>
+                    <h4 class="h5 section-title">View history</h4>
+                    <p class="helper-text mb-0">Review the most recent AQI checks stored under your account.</p>
+                </a>
+                <a href="/logout" class="quick-card text-start">
+                    <div class="quick-icon mb-3"><i class="bi bi-box-arrow-right"></i></div>
+                    <h4 class="h5 section-title">Logout</h4>
+                    <p class="helper-text mb-0">End the session from a clean, secure exit.</p>
+                </a>
+            </div>
+        </section>
+
+        <section class="card-grid-3 mb-4">
+            <article class="feature-card">
+                <div class="feature-icon mb-3"><i class="bi bi-1-circle"></i></div>
+                <h4 class="section-title h5">Simple flow</h4>
+                <p class="helper-text mb-0">Most users only need a city, a place, and the current day to see a useful result.</p>
+            </article>
+            <article class="feature-card">
+                <div class="feature-icon mb-3"><i class="bi bi-2-circle"></i></div>
+                <h4 class="section-title h5">Expert mode</h4>
+                <p class="helper-text mb-0">Advanced pollutant inputs stay hidden unless you deliberately switch modes.</p>
+            </article>
+            <article class="feature-card">
+                <div class="feature-icon mb-3"><i class="bi bi-3-circle"></i></div>
+                <h4 class="section-title h5">Readable advice</h4>
+                <p class="helper-text mb-0">Advice is split into AQI status, health risks, precautions, and recommendations.</p>
+            </article>
+        </section>
+
+        <section id="historySection" class="surface-card p-4 p-lg-5">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+                <div>
+                    <span class="page-kicker"><i class="bi bi-journal-check"></i> Recent history</span>
+                    <h2 class="section-title h3 mt-3 mb-2">Latest predictions</h2>
+                    <p class="helper-text mb-0">Your last few AQI checks are listed here for fast review.</p>
+                </div>
+                <span class="badge-soft" id="historyCount">0 records</span>
+            </div>
+
+            <div id="historyList" class="history-list">
+                <div class="history-item">
+                    <div class="helper-text mb-0">Loading history...</div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const welcomeTitle = document.getElementById("welcomeTitle");
+        const welcomeCopy = document.getElementById("welcomeCopy");
+        const historyList = document.getElementById("historyList");
+        const historyCount = document.getElementById("historyCount");
+
+        function formatDate(value) {
+            if (!value) return "Recently";
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) return "Recently";
+            return date.toLocaleString([], {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit"
+            });
+        }
+
+        function badgeClass(status) {
+            const v = String(status || "").toLowerCase();
+            if (v.includes("good")) return "badge-good";
+            if (v.includes("moderate")) return "badge-moderate";
+            if (v.includes("very poor")) return "badge-very-poor";
+            if (v.includes("severe")) return "badge-severe";
+            if (v.includes("poor")) return "badge-poor";
+            return "badge-soft";
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#39;");
+        }
+
+        async function loadDashboard() {
+            try {
+                const meResponse = await fetch("/api/me");
+                const meData = await meResponse.json();
+
+                const name = meData?.user?.name || "User";
+                welcomeTitle.textContent = `Welcome back, ${name}`;
+                welcomeCopy.textContent = "Use the quick actions below to check air quality, revisit your saved predictions, or start a new check.";
+
+                const historyResponse = await fetch("/api/history?limit=6");
+                const historyData = await historyResponse.json();
+                const items = historyData.history || [];
+
+                historyCount.textContent = `${items.length} records`;
+
+                if (!items.length) {
+                    historyList.innerHTML = `
+                        <div class="history-item">
+                            <div class="fw-bold mb-1">No saved predictions yet</div>
+                            <div class="helper-text mb-0">Start a prediction to see your history here.</div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                historyList.innerHTML = items.map((item) => {
+                    const badge = badgeClass(item.aqiStatus);
+                    const pollutants = item.mode === "advanced" && item.pollutants
+                        ? Object.entries(item.pollutants)
+                            .filter(([, v]) => v !== null && v !== undefined && v !== "")
+                            .slice(0, 4)
+                            .map(([k, v]) => `<span class="mini-tag">${escapeHtml(k.toUpperCase())}: ${escapeHtml(v)}</span>`)
+                            .join("")
+                        : `<span class="mini-tag">Simple mode</span>`;
+
+                    return `
+                        <div class="history-item">
+                            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                                <div>
+                                    <div class="d-flex flex-wrap gap-2 mb-2">
+                                        <span class="badge-soft ${badge}">${escapeHtml(item.aqiStatus || "Unknown")}</span>
+                                        <span class="mini-tag">${escapeHtml(item.mode || "simple")} mode</span>
+                                    </div>
+                                    <div class="fw-bold fs-5">${escapeHtml(item.locationLabel || "Selected location")}</div>
+                                    <div class="helper-text mt-1 mb-0">${escapeHtml(item.advice?.summary || "")}</div>
+                                </div>
+                                <div class="text-end">
+                                    <div class="metric-number">${escapeHtml(item.aqiScore ?? 0)}</div>
+                                    <div class="helper-text">AQI score</div>
+                                </div>
+                            </div>
+                            <div class="history-meta mt-3">
+                                <span class="mini-tag"><i class="bi bi-calendar3 me-1"></i>${escapeHtml(formatDate(item.createdAt))}</span>
+                                <span class="mini-tag"><i class="bi bi-geo-alt me-1"></i>${escapeHtml([item.city, item.state].filter(Boolean).join(", ") || "Location saved")}</span>
+                                ${pollutants}
+                            </div>
+                        </div>
+                    `;
+                }).join("");
+            } catch (err) {
+                historyList.innerHTML = `
+                    <div class="history-item">
+                        <div class="fw-bold mb-1">Unable to load history</div>
+                        <div class="helper-text mb-0">Refresh the page or try again later.</div>
+                    </div>
+                `;
+            }
+        }
+
+        loadDashboard();
+    </script>
+</body>
+</html>
