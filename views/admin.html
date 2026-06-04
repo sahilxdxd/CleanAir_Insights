@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Panel • CleanAir Insights</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <nav class="navbar soft-nav">
+        <div class="container-fluid px-3 px-lg-4">
+            <a class="navbar-brand d-flex align-items-center gap-3" href="/">
+                <span class="brand-mark">AQ</span>
+                <span class="fw-bold">CleanAir Insights</span>
+            </a>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <a href="/dashboard" class="btn btn-ghost-modern btn-sm"><i class="bi bi-speedometer2 me-1"></i>Dashboard</a>
+                <a href="/predict" class="btn btn-outline-primary btn-sm"><i class="bi bi-activity me-1"></i>Predict</a>
+                <a href="/logout" class="btn btn-danger-modern btn-sm"><i class="bi bi-box-arrow-right me-1"></i>Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Toast notification -->
+    <div id="toast" style="position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;display:none;min-width:280px;max-width:400px;padding:0.9rem 1.2rem;border-radius:10px;font-size:0.88rem;font-weight:500;color:#fff;box-shadow:0 4px 20px rgba(0,0,0,0.15);transition:opacity 0.3s;"></div>
+
+    <!-- Confirm modal -->
+    <div id="confirmModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:9998;display:none;align-items:center;justify-content:center;">
+        <div style="background:#fff;border-radius:14px;padding:2rem;max-width:400px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.18);">
+            <h5 style="font-weight:700;margin-bottom:0.5rem;color:#1a1a2e;" id="modalTitle">Confirm delete</h5>
+            <p style="color:#6b7280;font-size:0.88rem;margin-bottom:1.5rem;" id="modalMsg">This action cannot be undone.</p>
+            <div style="display:flex;gap:10px;justify-content:flex-end;">
+                <button id="modalCancel" style="padding:0.5rem 1.2rem;border:1.5px solid #e5e7eb;border-radius:8px;background:#fff;color:#374151;font-weight:600;cursor:pointer;">Cancel</button>
+                <button id="modalConfirm" style="padding:0.5rem 1.2rem;border:none;border-radius:8px;background:#dc2626;color:#fff;font-weight:600;cursor:pointer;">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <main class="page-shell admin-layout">
+        <section class="surface-card p-4 p-lg-5 mb-4">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                <div>
+                    <span class="page-kicker"><i class="bi bi-shield-lock"></i> Admin access</span>
+                    <h1 class="section-title display-6 mt-3 mb-2">Management panel</h1>
+                    <p class="lead-copy mb-0">Review users, prediction history, and login activity from one dashboard.</p>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    <span class="soft-chip"><i class="bi bi-people"></i> Users</span>
+                    <span class="soft-chip"><i class="bi bi-journal-text"></i> Predictions</span>
+                    <span class="soft-chip"><i class="bi bi-clock-history"></i> Login history</span>
+                </div>
+            </div>
+
+            <div class="card-grid-3 mt-4">
+                <div class="metric-card p-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="metric-label">Total users</div>
+                            <div class="metric-number" id="userCount">0</div>
+                        </div>
+                        <div class="stat-icon"><i class="bi bi-people"></i></div>
+                    </div>
+                </div>
+                <div class="metric-card p-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="metric-label">Predictions</div>
+                            <div class="metric-number" id="predCount">0</div>
+                        </div>
+                        <div class="stat-icon"><i class="bi bi-journal-check"></i></div>
+                    </div>
+                </div>
+                <div class="metric-card p-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="metric-label">Login events</div>
+                            <div class="metric-number" id="loginCount">0</div>
+                        </div>
+                        <div class="stat-icon"><i class="bi bi-clock-history"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="search-toolbar mt-4 d-flex flex-wrap gap-2 align-items-center">
+                <input type="text" id="searchInput" class="form-control" placeholder="Search users, city, place, AQI status, mode, or action" style="max-width: 520px;">
+                <button class="filter-chip active" data-filter="all" type="button">All</button>
+                <button class="filter-chip" data-filter="simple" type="button">Simple</button>
+                <button class="filter-chip" data-filter="advanced" type="button">Advanced</button>
+                <button class="filter-chip" data-filter="login" type="button">Logins</button>
+                <button class="filter-chip" data-filter="logout" type="button">Logouts</button>
+            </div>
+        </section>
+
+        <section class="surface-card p-4 p-lg-5 mb-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                <div>
+                    <h2 class="section-title h3 mb-1">Users</h2>
+                    <p class="helper-text mb-0">Account list with role, login count, and last login time.</p>
+                </div>
+                <span class="badge-soft">Secure table</span>
+            </div>
+            <div class="table-shell">
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0" id="usersTable"></table>
+                </div>
+            </div>
+        </section>
+
+        <section class="surface-card p-4 p-lg-5 mb-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                <div>
+                    <h2 class="section-title h3 mb-1">Prediction history</h2>
+                    <p class="helper-text mb-0">City entries, expert pollutant input, AQI result, and advice summary.</p>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <a href="/admin/data/csv" id="downloadCsvBtn"
+                       style="display:inline-flex;align-items:center;gap:6px;padding:0.5rem 1.2rem;background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;border-radius:8px;text-decoration:none;font-weight:600;font-size:0.85rem;">
+                        <i class="bi bi-download"></i> Download CSV
+                    </a>
+                    <span class="badge-soft">Live records</span>
+                </div>
+            </div>
+            <div class="table-shell">
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0" id="predTable"></table>
+                </div>
+            </div>
+        </section>
+
+        <section class="surface-card p-4 p-lg-5">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                <div>
+                    <h2 class="section-title h3 mb-1">User login activity</h2>
+                    <p class="helper-text mb-0">Tracks every login and logout so admin can review access history.</p>
+                </div>
+                <span class="badge-soft">Audit trail</span>
+            </div>
+            <div class="table-shell">
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0" id="loginTable"></table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const usersTable = document.getElementById("usersTable");
+        const predTable = document.getElementById("predTable");
+        const loginTable = document.getElementById("loginTable");
+        const userCount = document.getElementById("userCount");
+        const predCount = document.getElementById("predCount");
+        const loginCount = document.getElementById("loginCount");
+        const searchInput = document.getElementById("searchInput");
+        const filterButtons = Array.from(document.querySelectorAll("[data-filter]"));
+
+        let allUsers = [];
+        let allPredictions = [];
+        let allLogins = [];
+        let activeFilter = "all";
+
+        function escapeHtml(value) {
+            return String(value ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#39;");
+        }
+
+        function formatDate(value) {
+            if (!value) return "-";
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) return "-";
+            return date.toLocaleString([], {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit"
+            });
+        }
+
+        function badgeClass(status) {
+            const v = String(status || "").toLowerCase();
+            if (v.includes("good")) return "badge-good";
+            if (v.includes("moderate")) return "badge-moderate";
+            if (v.includes("very poor")) return "badge-very-poor";
+            if (v.includes("severe")) return "badge-severe";
+            if (v.includes("poor")) return "badge-poor";
+            return "badge-soft";
+        }
+
+        function normalize(value) {
+            return String(value || "").toLowerCase();
+        }
+
+        function userMatchesSearch(user, q) {
+            if (!q) return true;
+            const text = [user.name, user.email, user.role, formatDate(user.lastLoginAt), String(user.loginCount || 0)].join(" ").toLowerCase();
+            return text.includes(q);
+        }
+
+        function recordMatchesFilter(record) {
+            if (activeFilter === "all") return true;
+            if (activeFilter === "simple") return normalize(record.mode).includes("simple");
+            if (activeFilter === "advanced") return normalize(record.mode).includes("advanced");
+            if (activeFilter === "login") return normalize(record.action).includes("login");
+            if (activeFilter === "logout") return normalize(record.action).includes("logout");
+            return true;
+        }
+
+        function recordMatchesSearch(record, q) {
+            if (!q) return true;
+            const text = [
+                record.userName,
+                record.userEmail,
+                record.city,
+                record.place,
+                record.state,
+                record.locationLabel,
+                record.mode,
+                record.aqiStatus,
+                record.aqiScore,
+                record.action,
+                record.summary
+            ].join(" ").toLowerCase();
+            const pollutantText = record.pollutants ? Object.values(record.pollutants).join(" ").toLowerCase() : "";
+            return text.includes(q) || pollutantText.includes(q);
+        }
+
+        function renderUsers(users) {
+            if (!users.length) {
+                usersTable.innerHTML = `
+                    <thead>
+                        <tr>
+                            <th>Name</th><th>Email</th><th>Role</th><th>Logins</th><th>Last login</th><th>Joined</th><th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="7" class="text-center py-4 text-muted">No users found.</td></tr>
+                    </tbody>
+                `;
+                return;
+            }
+
+            usersTable.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>Name</th><th>Email</th><th>Role</th><th>Logins</th><th>Last login</th><th>Joined</th><th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${users.map((u) => `
+                        <tr id="user-row-${escapeHtml(u._id)}">
+                            <td><div class="fw-bold">${escapeHtml(u.name)}</div></td>
+                            <td>${escapeHtml(u.email)}</td>
+                            <td><span class="badge-soft ${u.role === 'admin' ? 'badge-moderate' : ''}">${escapeHtml(u.role || 'user')}</span></td>
+                            <td>${escapeHtml(u.loginCount ?? 0)}</td>
+                            <td>${escapeHtml(formatDate(u.lastLoginAt))}</td>
+                            <td>${escapeHtml(formatDate(u.createdAt))}</td>
+                            <td>
+                                ${u.role !== 'admin' ? `
+                                <button
+                                    onclick="confirmDeleteUser('${escapeHtml(u._id)}', '${escapeHtml(u.name)}')"
+                                    style="padding:4px 12px;background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;border-radius:7px;font-size:0.78rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px;"
+                                    title="Delete user and all their data">
+                                    <i class="bi bi-trash3"></i> Delete
+                                </button>` : '<span style="font-size:0.75rem;color:#9ca3af;">Protected</span>'}
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            `;
+        }
+
+        function renderPredictions(preds) {
+            if (!preds.length) {
+                predTable.innerHTML = `
+                    <thead>
+                        <tr>
+                            <th>User</th><th>Location</th><th>Mode</th><th>Status</th><th>Score</th><th>Time</th><th>Pollutants</th><th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="8" class="text-center py-4 text-muted">No predictions found.</td></tr>
+                    </tbody>
+                `;
+                return;
+            }
+
+            predTable.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>User</th><th>Location</th><th>Mode</th><th>Status</th><th>Score</th><th>Time</th><th>Pollutants</th><th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${preds.map((p) => {
+                        const pollutantParts = p.pollutants
+                            ? Object.entries(p.pollutants)
+                                .filter(([, v]) => v !== null && v !== undefined && v !== '')
+                                .map(([k, v]) => `${k.toUpperCase()}: ${v}`)
+                            : [];
+                        const pollutantText = pollutantParts.length ? pollutantParts.join(' | ') : 'Live/Simple';
+                        return `
+                            <tr id="pred-row-${escapeHtml(p._id)}">
+                                <td>
+                                    <div class="fw-bold">${escapeHtml(p.userName || 'User')}</div>
+                                    <div class="text-muted small">${escapeHtml(p.userEmail || '')}</div>
+                                </td>
+                                <td>
+                                    <div class="fw-bold">${escapeHtml(p.locationLabel || 'Selected location')}</div>
+                                    <div class="text-muted small">${escapeHtml([p.city, p.place, p.state].filter(Boolean).join(' • '))}</div>
+                                </td>
+                                <td><span class="badge-soft">${escapeHtml(p.mode || 'simple')}</span></td>
+                                <td><span class="badge-soft ${badgeClass(p.aqiStatus)}">${escapeHtml(p.aqiStatus || 'Unknown')}</span></td>
+                                <td class="fw-bold">${escapeHtml(p.aqiScore ?? 0)}</td>
+                                <td>${escapeHtml(formatDate(p.createdAt))}</td>
+                                <td style="max-width:160px;font-size:0.78rem;color:#6b7280;">${escapeHtml(pollutantText)}</td>
+                                <td>
+                                    <button
+                                        onclick="confirmDeletePrediction('${escapeHtml(p._id)}', '${escapeHtml(p.locationLabel || p.state || 'this record')}')"
+                                        style="padding:4px 12px;background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;border-radius:7px;font-size:0.78rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px;"
+                                        title="Delete this prediction">
+                                        <i class="bi bi-trash3"></i> Delete
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('')}
+                </tbody>
+            `;
+        }
+
+        function renderLogins(logins) {
+            if (!logins.length) {
+                loginTable.innerHTML = `
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Action</th>
+                            <th>Time</th>
+                            <th>IP</th>
+                            <th>User agent</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="5" class="text-center py-4 text-muted">No login activity found.</td></tr>
+                    </tbody>
+                `;
+                return;
+            }
+
+            loginTable.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Action</th>
+                        <th>Time</th>
+                        <th>IP</th>
+                        <th>User agent</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${logins.map((a) => `
+                        <tr>
+                            <td>
+                                <div class="fw-bold">${escapeHtml(a.userName || "User")}</div>
+                                <div class="text-muted small">${escapeHtml(a.userEmail || "")}</div>
+                            </td>
+                            <td><span class="badge-soft ${a.action === "login" ? "badge-good" : "badge-poor"}">${escapeHtml(a.action || "")}</span></td>
+                            <td>${escapeHtml(formatDate(a.createdAt))}</td>
+                            <td>${escapeHtml(a.ip || "-")}</td>
+                            <td style="max-width: 320px;"><div class="text-muted small text-truncate">${escapeHtml(a.userAgent || "-")}</div></td>
+                        </tr>
+                    `).join("")}
+                </tbody>
+            `;
+        }
+
+        function applyFilters() {
+            const q = searchInput.value.trim().toLowerCase();
+            const filteredUsers = allUsers.filter((u) => userMatchesSearch(u, q));
+            const filteredPredictions = allPredictions.filter((p) => recordMatchesFilter(p) && recordMatchesSearch(p, q));
+            const filteredLogins = allLogins.filter((a) => recordMatchesFilter(a) && recordMatchesSearch(a, q));
+
+            userCount.textContent = filteredUsers.length;
+            predCount.textContent = filteredPredictions.length;
+            loginCount.textContent = filteredLogins.length;
+
+            renderUsers(filteredUsers);
+            renderPredictions(filteredPredictions);
+            renderLogins(filteredLogins);
+        }
+
+        function setActiveFilter(filter) {
+            activeFilter = filter;
+            filterButtons.forEach((btn) => btn.classList.toggle("active", btn.dataset.filter === filter));
+            applyFilters();
+        }
+
+        async function loadData() {
+            try {
+                const res = await fetch("/admin/data");
+                const data = await res.json();
+
+                if (!res.ok || !data.success) {
+                    throw new Error(data.message || "Unable to load admin data.");
+                }
+
+                allUsers = data.users || [];
+                allPredictions = data.predictions || [];
+                allLogins = data.loginActivities || [];
+
+                applyFilters();
+            } catch (err) {
+                usersTable.innerHTML = `
+                    <tbody><tr><td class="text-center py-4 text-danger">Unable to load users.</td></tr></tbody>
+                `;
+                predTable.innerHTML = `
+                    <tbody><tr><td class="text-center py-4 text-danger">Unable to load predictions.</td></tr></tbody>
+                `;
+                loginTable.innerHTML = `
+                    <tbody><tr><td class="text-center py-4 text-danger">Unable to load login activity.</td></tr></tbody>
+                `;
+            }
+        }
+
+        searchInput.addEventListener("input", applyFilters);
+        filterButtons.forEach((btn) => {
+            btn.addEventListener("click", () => setActiveFilter(btn.dataset.filter));
+        });
+
+        loadData();
+
+        // ── Toast ───────────────────────────────────────────────
+        function showToast(msg, isError = false) {
+            const t = document.getElementById("toast");
+            t.textContent = msg;
+            t.style.background = isError ? "#dc2626" : "#16a34a";
+            t.style.display = "block";
+            t.style.opacity = "1";
+            clearTimeout(t._timer);
+            t._timer = setTimeout(() => {
+                t.style.opacity = "0";
+                setTimeout(() => { t.style.display = "none"; }, 300);
+            }, 3000);
+        }
+
+        // ── Confirm modal ───────────────────────────────────────
+        let _pendingAction = null;
+        const confirmModal = document.getElementById("confirmModal");
+        const modalTitle  = document.getElementById("modalTitle");
+        const modalMsg    = document.getElementById("modalMsg");
+        const modalConfirm = document.getElementById("modalConfirm");
+        const modalCancel  = document.getElementById("modalCancel");
+
+        function openConfirm(title, msg, action) {
+            modalTitle.textContent = title;
+            modalMsg.textContent = msg;
+            _pendingAction = action;
+            confirmModal.style.display = "flex";
+        }
+        function closeConfirm() {
+            confirmModal.style.display = "none";
+            _pendingAction = null;
+        }
+        modalCancel.addEventListener("click", closeConfirm);
+        confirmModal.addEventListener("click", (e) => { if (e.target === confirmModal) closeConfirm(); });
+        modalConfirm.addEventListener("click", async () => {
+            if (_pendingAction) await _pendingAction();
+            closeConfirm();
+        });
+
+        // ── Delete user ─────────────────────────────────────────
+        function confirmDeleteUser(userId, userName) {
+            openConfirm(
+                `Delete "${userName}"?`,
+                `This will permanently delete the user account and all their predictions and login history. This cannot be undone.`,
+                () => deleteUser(userId, userName)
+            );
+        }
+
+        async function deleteUser(userId, userName) {
+            try {
+                const res = await fetch(`/admin/user/${userId}`, { method: "DELETE" });
+                const data = await res.json();
+                if (!res.ok || !data.success) throw new Error(data.message || "Delete failed.");
+
+                // Remove row and update local data
+                const row = document.getElementById(`user-row-${userId}`);
+                if (row) { row.style.opacity = "0"; row.style.transition = "opacity 0.3s"; setTimeout(() => row.remove(), 300); }
+                allUsers = allUsers.filter(u => String(u._id) !== userId);
+                allPredictions = allPredictions.filter(p => String(p.userId) !== userId);
+                allLogins = allLogins.filter(l => String(l.userId) !== userId);
+                applyFilters();
+                showToast(`User "${userName}" deleted successfully.`);
+            } catch (err) {
+                showToast(err.message || "Failed to delete user.", true);
+            }
+        }
+
+        // ── Delete prediction ───────────────────────────────────
+        function confirmDeletePrediction(predId, label) {
+            openConfirm(
+                `Delete this prediction?`,
+                `Prediction for "${label}" will be permanently removed.`,
+                () => deletePrediction(predId)
+            );
+        }
+
+        async function deletePrediction(predId) {
+            try {
+                const res = await fetch(`/admin/prediction/${predId}`, { method: "DELETE" });
+                const data = await res.json();
+                if (!res.ok || !data.success) throw new Error(data.message || "Delete failed.");
+
+                const row = document.getElementById(`pred-row-${predId}`);
+                if (row) { row.style.opacity = "0"; row.style.transition = "opacity 0.3s"; setTimeout(() => row.remove(), 300); }
+                allPredictions = allPredictions.filter(p => String(p._id) !== predId);
+                applyFilters();
+                showToast("Prediction deleted successfully.");
+            } catch (err) {
+                showToast(err.message || "Failed to delete prediction.", true);
+            }
+        }
+    </script>
+</body>
+</html>

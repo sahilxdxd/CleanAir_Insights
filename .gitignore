@@ -1,0 +1,30 @@
+# Node
+node_modules/
+npm-debug.log*
+package-lock.json
+
+# Environment variables (secrets)
+.env
+
+# Python
+ml-service/venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+ml-service/__pycache__/
+ml-service/*.pyc
+
+# ML model binaries (large files)
+ml-service/model_store/*.joblib
+ml-service/data/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# PDF/Resume files (personal)
+*.pdf
+
+# Misc
+testfile.txt

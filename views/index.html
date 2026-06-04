@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CleanAir Insights — Real-Time AQI for India</title>
+    <meta name="description" content="Check real-time air quality for any Indian state instantly. Free, accurate, and powered by live data." />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background: #f8faff; color: #1a1a2e; }
+
+        /* NAV */
+        nav { background: #fff; border-bottom: 1px solid #e5e7eb; padding: 0.9rem 1.5rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+        .nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: #1a1a2e; }
+        .brand-mark { background: linear-gradient(135deg, #2563eb, #7c3aed); color: #fff; font-weight: 700; font-size: 0.8rem; padding: 5px 10px; border-radius: 8px; letter-spacing: 1px; }
+        .brand-name { font-weight: 700; font-size: 1.05rem; }
+        .nav-actions { display: flex; gap: 10px; }
+        .btn-ghost { padding: 0.45rem 1rem; border: 1.5px solid #e5e7eb; border-radius: 8px; text-decoration: none; color: #374151; font-size: 0.85rem; font-weight: 500; transition: all 0.2s; }
+        .btn-ghost:hover { border-color: #2563eb; color: #2563eb; }
+        .btn-primary { padding: 0.45rem 1.1rem; background: linear-gradient(135deg, #2563eb, #7c3aed); color: #fff; border: none; border-radius: 8px; text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: opacity 0.2s; }
+        .btn-primary:hover { opacity: 0.9; }
+
+        /* HERO */
+        .hero { max-width: 960px; margin: 0 auto; padding: 4rem 1.5rem 3rem; text-align: center; }
+        .hero-badge { display: inline-flex; align-items: center; gap: 6px; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; border-radius: 20px; padding: 5px 14px; font-size: 0.8rem; font-weight: 600; margin-bottom: 1.5rem; }
+        .hero-title { font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 800; line-height: 1.2; margin-bottom: 1rem; color: #1a1a2e; }
+        .hero-title span { background: linear-gradient(135deg, #2563eb, #7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .hero-sub { font-size: 1.05rem; color: #6b7280; max-width: 560px; margin: 0 auto 2rem; line-height: 1.7; }
+        .hero-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+        .btn-hero-primary { padding: 0.8rem 2rem; background: linear-gradient(135deg, #2563eb, #7c3aed); color: #fff; border: none; border-radius: 10px; text-decoration: none; font-size: 0.95rem; font-weight: 600; transition: transform 0.2s, opacity 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-hero-primary:hover { transform: translateY(-2px); opacity: 0.92; }
+        .btn-hero-ghost { padding: 0.8rem 2rem; background: #fff; color: #374151; border: 1.5px solid #e5e7eb; border-radius: 10px; text-decoration: none; font-size: 0.95rem; font-weight: 500; transition: border-color 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-hero-ghost:hover { border-color: #2563eb; color: #2563eb; }
+
+        /* AQI SCALE */
+        .scale-section { max-width: 800px; margin: 0 auto 3rem; padding: 0 1.5rem; }
+        .scale-title { text-align: center; font-size: 0.85rem; font-weight: 600; color: #6b7280; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 1px; }
+        .aqi-scale { display: flex; border-radius: 12px; overflow: hidden; height: 44px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .scale-seg { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; color: #fff; flex-direction: column; gap: 2px; }
+        .scale-seg span { font-size: 0.6rem; opacity: 0.85; }
+        .seg-good { background: #22c55e; }
+        .seg-satisfactory { background: #84cc16; }
+        .seg-moderate { background: #eab308; color: #1a1a2e; }
+        .seg-moderate span { opacity: 0.7; }
+        .seg-poor { background: #f97316; }
+        .seg-very-poor { background: #ef4444; }
+        .seg-severe { background: #7c3aed; }
+
+        /* WORKFLOW */
+        .workflow-section { max-width: 900px; margin: 0 auto 4rem; padding: 0 1.5rem; }
+        .section-label { text-align: center; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #9ca3af; margin-bottom: 0.5rem; }
+        .section-heading { text-align: center; font-size: 1.6rem; font-weight: 700; color: #1a1a2e; margin-bottom: 2.5rem; }
+        .workflow-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; }
+        .step-card { border-radius: 14px; padding: 1.5rem; position: relative; }
+        .step-card.step-1 { background: #eff6ff; border: 1.5px solid #bfdbfe; }
+        .step-card.step-2 { background: #f0fdf4; border: 1.5px solid #bbf7d0; }
+        .step-card.step-3 { background: #fff7ed; border: 1.5px solid #fed7aa; }
+        .step-card.step-4 { background: #faf5ff; border: 1.5px solid #e9d5ff; }
+        .step-num { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; margin-bottom: 1rem; }
+        .step-1 .step-num { background: #2563eb; color: #fff; }
+        .step-2 .step-num { background: #16a34a; color: #fff; }
+        .step-3 .step-num { background: #ea580c; color: #fff; }
+        .step-4 .step-num { background: #7c3aed; color: #fff; }
+        .step-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 0.4rem; }
+        .step-1 .step-title { color: #1d4ed8; }
+        .step-2 .step-title { color: #15803d; }
+        .step-3 .step-title { color: #c2410c; }
+        .step-4 .step-title { color: #6d28d9; }
+        .step-desc { font-size: 0.82rem; color: #6b7280; line-height: 1.5; }
+
+        /* FEATURES */
+        .features-section { background: #fff; border-top: 1px solid #e5e7eb; padding: 3rem 1.5rem; }
+        .features-inner { max-width: 900px; margin: 0 auto; }
+        .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+        .feature-card { padding: 1.5rem; border-radius: 12px; border: 1.5px solid #f3f4f6; transition: border-color 0.2s, transform 0.2s; }
+        .feature-card:hover { border-color: #2563eb; transform: translateY(-2px); }
+        .feature-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-bottom: 1rem; }
+        .fi-blue { background: #eff6ff; color: #2563eb; }
+        .fi-green { background: #f0fdf4; color: #16a34a; }
+        .fi-orange { background: #fff7ed; color: #ea580c; }
+        .feature-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 0.4rem; }
+        .feature-desc { font-size: 0.82rem; color: #6b7280; line-height: 1.55; }
+
+        /* FOOTER */
+        footer { background: #1a1a2e; color: #9ca3af; text-align: center; padding: 1.5rem; font-size: 0.8rem; }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="/" class="nav-brand">
+            <span class="brand-mark">AQ</span>
+            <span class="brand-name">CleanAir Insights</span>
+        </a>
+        <div class="nav-actions">
+            <a href="/predict" class="btn-primary"><i class="bi bi-broadcast" style="font-size:0.8rem;"></i> Check AQI</a>
+    </nav>
+
+    <main>
+        <!-- HERO -->
+        <section class="hero">
+            <div class="hero-badge"><i class="bi bi-broadcast"></i> Live data directly from aqi.in — India's #1 AQI source</div>
+            <h1 class="hero-title">Real-time air quality<br>for every <span>Indian state</span></h1>
+            <p class="hero-sub">Select your state and get the live AQI score and health advice instantly — <strong>no account needed</strong>. Expert AI prediction mode requires a free account.</p>
+            <div class="hero-btns">
+                <a href="/predict" class="btn-hero-primary"><i class="bi bi-broadcast"></i> Check AQI — It's Free</a>
+                <a href="/login" class="btn-hero-ghost" style="font-size:0.85rem; padding:0.65rem 1.4rem;"><i class="bi bi-cpu"></i> Expert Mode Login</a>
+            </div>
+        </section>
+
+        <!-- AQI COLOR SCALE -->
+        <div class="scale-section">
+            <div class="scale-title">AQI Color Scale</div>
+            <div class="aqi-scale">
+                <div class="scale-seg seg-good">Good<span>0–50</span></div>
+                <div class="scale-seg seg-satisfactory">Satisfactory<span>51–100</span></div>
+                <div class="scale-seg seg-moderate">Moderate<span>101–200</span></div>
+                <div class="scale-seg seg-poor">Poor<span>201–300</span></div>
+                <div class="scale-seg seg-very-poor">Very Poor<span>301–400</span></div>
+                <div class="scale-seg seg-severe">Severe<span>400+</span></div>
+            </div>
+        </div>
+
+        <!-- WORKFLOW -->
+        <div class="workflow-section">
+            <div class="section-label">How it works</div>
+            <div class="section-heading">4 simple steps</div>
+            <div class="workflow-steps">
+                <div class="step-card step-1">
+                    <div class="step-num">1</div>
+                    <div class="step-title">Open the app</div>
+                    <div class="step-desc">No login needed. Visit the AQI checker directly — it's always free.</div>
+                </div>
+                <div class="step-card step-2">
+                    <div class="step-num">2</div>
+                    <div class="step-title">Select your state</div>
+                    <div class="step-desc">Pick any Indian state from the dropdown. That's all you need for live data.</div>
+                </div>
+                <div class="step-card step-3">
+                    <div class="step-num">3</div>
+                    <div class="step-title">Get live AQI</div>
+                    <div class="step-desc">See your real-time AQI score, status badge, and personalised health advice.</div>
+                </div>
+                <div class="step-card step-4">
+                    <div class="step-num">4</div>
+                    <div class="step-title">Expert AI mode</div>
+                    <div class="step-desc">Create a free account to unlock AI-powered predictions, history, and dashboard.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FEATURES -->
+        <section class="features-section">
+            <div class="features-inner">
+                <div class="section-label" style="margin-bottom:0.5rem;">Features</div>
+                <div class="section-heading">Everything you need</div>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon fi-blue"><i class="bi bi-broadcast"></i></div>
+                        <div class="feature-title">Real-time data</div>
+                        <div class="feature-desc">Powered by the WAQI global network with live station readings across India.</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon fi-green"><i class="bi bi-heart-pulse"></i></div>
+                        <div class="feature-title">Health advisory</div>
+                        <div class="feature-desc">Get structured risks, precautions, and recommendations based on current AQI.</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon fi-orange"><i class="bi bi-journal-text"></i></div>
+                        <div class="feature-title">Saved history</div>
+                        <div class="feature-desc">All your lookups are stored so you can track air quality trends over time.</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        &copy; 2025 CleanAir Insights — Real-time AQI for India
+    </footer>
+</body>
+</html>

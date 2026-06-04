@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Predict AQI • CleanAir Insights</title>
+    <meta name="description" content="Select your Indian state to get real-time AQI data and health advice." />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background: #f8faff; color: #1a1a2e; min-height: 100vh; }
+
+        /* NAV */
+        nav { background: #fff; border-bottom: 1px solid #e5e7eb; padding: 0.8rem 1.5rem; display: flex; align-items: center; justify-content: space-between; }
+        .nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: #1a1a2e; }
+        .brand-mark { background: linear-gradient(135deg, #2563eb, #7c3aed); color: #fff; font-weight: 700; font-size: 0.75rem; padding: 4px 9px; border-radius: 7px; letter-spacing: 1px; }
+        .brand-name { font-weight: 700; font-size: 1rem; }
+        .nav-right { display: flex; gap: 10px; align-items: center; }
+        .btn-nav { padding: 0.4rem 0.9rem; border-radius: 8px; text-decoration: none; font-size: 0.82rem; font-weight: 500; transition: all 0.2s; }
+        .btn-nav-ghost { border: 1.5px solid #e5e7eb; color: #374151; }
+        .btn-nav-ghost:hover { border-color: #2563eb; color: #2563eb; }
+        .btn-nav-danger { background: #fef2f2; color: #dc2626; border: 1.5px solid #fca5a5; }
+        .btn-nav-danger:hover { background: #dc2626; color: #fff; }
+
+        /* MAIN LAYOUT */
+        .page-wrap { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+        .page-header { margin-bottom: 2rem; }
+        .page-kicker { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #2563eb; display: flex; align-items: center; gap: 6px; margin-bottom: 0.5rem; }
+        .page-title { font-size: 1.8rem; font-weight: 700; color: #1a1a2e; margin-bottom: 0.4rem; }
+        .page-sub { color: #6b7280; font-size: 0.9rem; }
+
+        /* MODE TABS */
+        .mode-tabs { display: inline-flex; background: #f3f4f6; border-radius: 10px; padding: 4px; margin-bottom: 2rem; }
+        .mode-tab { padding: 0.45rem 1.2rem; border-radius: 7px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s; border: none; background: transparent; color: #6b7280; }
+        .mode-tab.active { background: #fff; color: #2563eb; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+
+        /* GRID */
+        .predict-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        @media (max-width: 768px) { .predict-grid { grid-template-columns: 1fr; } }
+
+        /* CARDS */
+        .card { background: #fff; border-radius: 14px; padding: 1.75rem; border: 1.5px solid #e5e7eb; }
+        .card-title { font-weight: 700; font-size: 1rem; color: #1a1a2e; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 8px; }
+        .card-title i { color: #2563eb; }
+
+        /* FORM */
+        .field { margin-bottom: 1rem; }
+        .field label { display: block; font-weight: 600; font-size: 0.82rem; color: #374151; margin-bottom: 0.35rem; }
+        .field select,
+        .field input[type="number"],
+        .field input[type="text"] {
+            width: 100%;
+            height: 42px;
+            padding: 0 0.85rem;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 9px;
+            font-size: 0.875rem;
+            background: #f9fafb;
+            color: #1a1a2e;
+            outline: none;
+            transition: border-color 0.18s, background 0.18s;
+            font-family: inherit;
+            appearance: none;
+            -moz-appearance: textfield;
+        }
+        .field select { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.75rem center; padding-right: 2.2rem; }
+        .field select:focus, .field input:focus { border-color: #2563eb; background: #fff; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        .field input::placeholder { color: #9ca3af; font-size: 0.83rem; }
+        .field input[type=number]::-webkit-inner-spin-button,
+        .field input[type=number]::-webkit-outer-spin-button { opacity: 0.4; }
+
+        .info-box { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 0.8rem 1rem; font-size: 0.82rem; color: #1d4ed8; display: flex; gap: 8px; align-items: flex-start; margin-bottom: 1.25rem; }
+
+        .btn-submit { width: 100%; padding: 0.78rem; background: linear-gradient(135deg, #2563eb, #7c3aed); color: #fff; border: none; border-radius: 10px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: transform 0.15s, opacity 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 0.5rem; }
+        .btn-submit:hover { transform: translateY(-1px); opacity: 0.92; }
+        .btn-submit:disabled { opacity: 0.6; transform: none; cursor: not-allowed; }
+
+        /* RESULT */
+        .result-placeholder { text-align: center; padding: 3rem 1rem; }
+        .result-placeholder-icon { font-size: 3rem; color: #d1d5db; margin-bottom: 1rem; }
+        .result-placeholder-title { font-weight: 600; color: #9ca3af; font-size: 0.95rem; }
+        .result-placeholder-sub { font-size: 0.82rem; color: #d1d5db; margin-top: 0.3rem; }
+
+        /* AQI PILL */
+        .aqi-badge { display: inline-flex; align-items: center; gap: 6px; padding: 0.4rem 1rem; border-radius: 20px; font-weight: 700; font-size: 0.85rem; }
+        .aqi-good { background: #dcfce7; color: #15803d; }
+        .aqi-moderate, .aqi-satisfactory { background: #fef9c3; color: #854d0e; }
+        .aqi-poor { background: #ffedd5; color: #c2410c; }
+        .aqi-very-poor { background: #fee2e2; color: #dc2626; }
+        .aqi-severe { background: #f3e8ff; color: #6d28d9; }
+        .aqi-unknown { background: #f3f4f6; color: #6b7280; }
+
+        /* SCORE */
+        .score-display { display: flex; align-items: baseline; gap: 8px; margin: 1rem 0; }
+        .score-number { font-size: 3.5rem; font-weight: 800; line-height: 1; }
+        .score-label { font-size: 0.85rem; color: #6b7280; font-weight: 500; }
+
+        /* RESULT SECTIONS */
+        .result-section { border-top: 1px solid #f3f4f6; padding-top: 1rem; margin-top: 1rem; }
+        .result-section-title { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #9ca3af; margin-bottom: 0.6rem; display: flex; align-items: center; gap: 6px; }
+        .result-section-title i { font-size: 0.9rem; }
+        .result-list { list-style: none; display: flex; flex-direction: column; gap: 5px; }
+        .result-list li { font-size: 0.85rem; color: #374151; display: flex; gap: 7px; align-items: flex-start; line-height: 1.5; }
+        .result-list li::before { content: "→"; color: #2563eb; flex-shrink: 0; margin-top: 1px; }
+
+        /* SOURCE CHIP */
+        .source-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 0.72rem; font-weight: 600; padding: 3px 9px; border-radius: 12px; }
+        .source-real { background: #dcfce7; color: #15803d; }
+        .source-fallback { background: #fef9c3; color: #854d0e; }
+
+        /* ADVANCED SECTION */
+        .adv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; }
+        .adv-grid .field { margin-bottom: 0.25rem; }
+
+        /* ERROR */
+        .error-box { background: #fef2f2; border: 1px solid #fca5a5; color: #dc2626; border-radius: 10px; padding: 0.75rem 1rem; font-size: 0.85rem; display: none; margin-top: 1rem; }
+
+        /* TOOLTIPS */
+        .field-label-row { display: flex; align-items: center; gap: 5px; margin-bottom: 0.35rem; }
+        .field-label-row label { font-weight: 600; font-size: 0.82rem; color: #374151; margin: 0; }
+        .tip-icon { width: 16px; height: 16px; border-radius: 50%; background: #eff6ff; border: 1px solid #bfdbfe; color: #2563eb; font-size: 0.6rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; cursor: help; position: relative; flex-shrink: 0; }
+        .tip-icon .tip-text { display: none; position: absolute; bottom: calc(100% + 7px); left: 50%; transform: translateX(-50%); background: #1a1a2e; color: #fff; font-size: 0.71rem; font-weight: 400; padding: 7px 11px; border-radius: 8px; z-index: 100; width: 210px; white-space: normal; line-height: 1.45; box-shadow: 0 4px 12px rgba(0,0,0,0.25); }
+        .tip-icon .tip-text::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 5px solid transparent; border-top-color: #1a1a2e; }
+        .tip-icon:hover .tip-text { display: block; }
+
+        /* LOGIN PROMPT */
+        .login-prompt { background: linear-gradient(135deg, #eff6ff, #f5f3ff); border: 1.5px solid #bfdbfe; border-radius: 12px; padding: 2rem 1.5rem; text-align: center; }
+        .login-prompt h3 { font-size: 1.05rem; font-weight: 700; color: #1a1a2e; margin-bottom: 0.5rem; }
+        .login-prompt p { font-size: 0.85rem; color: #6b7280; margin-bottom: 1.25rem; line-height: 1.6; }
+        .login-prompt-btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+        .btn-lp-primary { padding: 0.6rem 1.4rem; background: linear-gradient(135deg, #2563eb, #7c3aed); color: #fff; border-radius: 9px; text-decoration: none; font-weight: 600; font-size: 0.85rem; }
+        .btn-lp-ghost { padding: 0.6rem 1.4rem; border: 1.5px solid #e5e7eb; color: #374151; border-radius: 9px; text-decoration: none; font-weight: 500; font-size: 0.85rem; }
+
+        .hide { display: none !important; }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="/" class="nav-brand">
+            <span class="brand-mark">AQ</span>
+            <span class="brand-name">CleanAir Insights</span>
+        </a>
+        <div class="nav-right" id="navRight">
+            <!-- Filled dynamically by JS based on login state -->
+        </div>
+    </nav>
+
+    <div class="page-wrap">
+        <div class="page-header">
+            <div class="page-kicker"><i class="bi bi-broadcast"></i> Live AQI prediction</div>
+            <h1 class="page-title">Check air quality for your state</h1>
+            <p class="page-sub">Simple mode fetches real-time data. Switch to expert mode to enter pollutant values manually.</p>
+        </div>
+
+        <div class="mode-tabs">
+            <button class="mode-tab active" id="simpleBtn" type="button">Simple mode</button>
+            <button class="mode-tab" id="advancedBtn" type="button">Expert mode</button>
+        </div>
+
+        <div class="predict-grid">
+            <!-- FORM CARD -->
+            <div class="card">
+                <div class="card-title"><i class="bi bi-sliders"></i> Input</div>
+
+                <form id="form">
+                    <input type="hidden" id="modeInput" name="mode" value="simple">
+
+                    <!-- SIMPLE SECTION -->
+                    <div id="simpleSection">
+                        <div class="info-box">
+                            <i class="bi bi-info-circle" style="flex-shrink:0; margin-top:1px;"></i>
+                            <div>Select your state. We'll fetch real-time AQI data from the nearest monitoring station.</div>
+                        </div>
+                        <div class="field">
+                            <label for="state">State</label>
+                            <select id="state" name="state" required>
+                                <option value="">Select a state…</option>
+                                <option>Andhra Pradesh</option>
+                                <option>Arunachal Pradesh</option>
+                                <option>Assam</option>
+                                <option>Bihar</option>
+                                <option>Chandigarh</option>
+                                <option>Chhattisgarh</option>
+                                <option>Delhi</option>
+                                <option>Goa</option>
+                                <option>Gujarat</option>
+                                <option>Haryana</option>
+                                <option>Himachal Pradesh</option>
+                                <option>Jammu &amp; Kashmir</option>
+                                <option>Jharkhand</option>
+                                <option>Karnataka</option>
+                                <option>Kerala</option>
+                                <option>Ladakh</option>
+                                <option>Madhya Pradesh</option>
+                                <option>Maharashtra</option>
+                                <option>Manipur</option>
+                                <option>Meghalaya</option>
+                                <option>Mizoram</option>
+                                <option>Nagaland</option>
+                                <option>Odisha</option>
+                                <option>Puducherry</option>
+                                <option>Punjab</option>
+                                <option>Rajasthan</option>
+                                <option>Sikkim</option>
+                                <option>Tamil Nadu</option>
+                                <option>Telangana</option>
+                                <option>Tripura</option>
+                                <option>Uttar Pradesh</option>
+                                <option>Uttarakhand</option>
+                                <option>West Bengal</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- ADVANCED SECTION -->
+                    <div id="advancedSection" class="hide">
+                        <!-- Login prompt shown to guests -->
+                        <div id="expertLoginPrompt" class="login-prompt hide">
+                            <div style="font-size:2rem; margin-bottom:0.75rem;">🔒</div>
+                            <h3>Expert Mode requires a free account</h3>
+                            <p>Sign up for free to unlock AI-powered AQI prediction, anomaly detection, confidence scoring, and saved history.</p>
+                            <div class="login-prompt-btns">
+                                <a href="/signup" class="btn-lp-primary"><i class="bi bi-person-plus"></i> Create Free Account</a>
+                                <a href="/login" class="btn-lp-ghost"><i class="bi bi-box-arrow-in-right"></i> Log In</a>
+                            </div>
+                        </div>
+                        <!-- Expert form shown only to logged-in users -->
+                        <div id="expertForm" class="hide">
+                        <div class="field">
+                            <label for="stateAdv">State</label>
+                            <select id="stateAdv" name="stateAdv">
+                                <option value="">Select a state (optional)…</option>
+                                <option>Delhi</option><option>Punjab</option><option>Haryana</option>
+                                <option>Maharashtra</option><option>West Bengal</option><option>Karnataka</option>
+                                <option>Tamil Nadu</option><option>Telangana</option><option>Uttar Pradesh</option>
+                                <option>Gujarat</option><option>Rajasthan</option>
+                            </select>
+                        </div>
+                        <div class="adv-grid">
+                            <div class="field">
+                                <div class="field-label-row">
+                                    <label>PM2.5 (µg/m³)</label>
+                                    <span class="tip-icon">ⓘ<span class="tip-text">Fine particulate matter smaller than 2.5 microns. Most harmful pollutant — enters deep into lungs and bloodstream. Normal outdoor range: 0–60 µg/m³.</span></span>
+                                </div>
+                                <input name="pm25" placeholder="e.g. 120" type="number" min="0" max="1000">
+                            </div>
+                            <div class="field">
+                                <div class="field-label-row">
+                                    <label>PM10 (µg/m³)</label>
+                                    <span class="tip-icon">ⓘ<span class="tip-text">Coarse dust particles smaller than 10 microns. Causes respiratory irritation. Normal outdoor range: 0–100 µg/m³.</span></span>
+                                </div>
+                                <input name="pm10" placeholder="e.g. 180" type="number" min="0" max="1000">
+                            </div>
+                            <div class="field">
+                                <div class="field-label-row">
+                                    <label>NO₂ (ppb)</label>
+                                    <span class="tip-icon">ⓘ<span class="tip-text">Nitrogen Dioxide — emitted by vehicles and power plants. Irritates airways and worsens asthma. Normal urban range: 10–80 ppb.</span></span>
+                                </div>
+                                <input name="no2" placeholder="e.g. 60" type="number" min="0" max="500">
+                            </div>
+                            <div class="field">
+                                <div class="field-label-row">
+                                    <label>SO₂ (ppb)</label>
+                                    <span class="tip-icon">ⓘ<span class="tip-text">Sulphur Dioxide — from burning coal and industrial processes. Causes acid rain and lung irritation. Normal range: 0–20 ppb.</span></span>
+                                </div>
+                                <input name="so2" placeholder="e.g. 35" type="number" min="0" max="500">
+                            </div>
+                            <div class="field">
+                                <div class="field-label-row">
+                                    <label>CO (ppb)</label>
+                                    <span class="tip-icon">ⓘ<span class="tip-text">Carbon Monoxide — odourless gas from incomplete combustion. High levels reduce oxygen in blood. Normal outdoor range: 100–2000 ppb.</span></span>
+                                </div>
+                                <input name="co" placeholder="e.g. 600" type="number" min="0" max="10000">
+                            </div>
+                            <div class="field">
+                                <div class="field-label-row">
+                                    <label>O₃ (ppb)</label>
+                                    <span class="tip-icon">ⓘ<span class="tip-text">Ground-level Ozone — formed by sunlight reacting with pollutants. Peaks in summer afternoons. Normal range: 10–60 ppb.</span></span>
+                                </div>
+                                <input name="o3" placeholder="e.g. 90" type="number" min="0" max="500">
+                            </div>
+                            <div class="field">
+                                <div class="field-label-row">
+                                    <label>Temperature (°C)</label>
+                                    <span class="tip-icon">ⓘ<span class="tip-text">Ambient air temperature. High temperatures increase ozone formation and worsen pollution dispersion. Normal range: -5 to 50°C.</span></span>
+                                </div>
+                                <input name="temperature" placeholder="e.g. 28" type="number" min="-20" max="60">
+                            </div>
+                            <div class="field">
+                                <div class="field-label-row">
+                                    <label>Humidity (%)</label>
+                                    <span class="tip-icon">ⓘ<span class="tip-text">Relative humidity. High humidity traps pollution near the ground. Low humidity increases dust suspension. Range: 0–100%.</span></span>
+                                </div>
+                                <input name="humidity" placeholder="e.g. 65" type="number" min="0" max="100">
+                            </div>
+                        </div>
+                        </div><!-- end expertForm -->
+                    </div>
+
+                    <button class="btn-submit" type="submit" id="submitBtn">
+                        <i class="bi bi-search"></i> Get Live AQI
+                    </button>
+                    <div class="error-box" id="errorBox"></div>
+                </form>
+            </div>
+
+            <!-- RESULT CARD -->
+            <div class="card" id="resultCard">
+                <!-- Placeholder -->
+                <div id="emptyState">
+                    <div class="result-placeholder">
+                        <div class="result-placeholder-icon"><i class="bi bi-broadcast"></i></div>
+                        <div class="result-placeholder-title">Your AQI result will appear here</div>
+                        <div class="result-placeholder-sub">Select a state and click "Get Live AQI"</div>
+                    </div>
+                </div>
+
+                <!-- Result -->
+                <div id="resultBox" class="hide">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:8px; margin-bottom:0.5rem;">
+                        <div>
+                            <div style="font-size:0.78rem; color:#6b7280; font-weight:600; text-transform:uppercase; letter-spacing:1px;">Air Quality Index</div>
+                            <div style="font-weight:700; font-size:1.05rem; margin-top:3px;" id="locationTitle">—</div>
+                        </div>
+                        <span id="sourceChip" class="source-chip source-real"><i class="bi bi-broadcast"></i> Live</span>
+                    </div>
+
+                    <div class="score-display">
+                        <div class="score-number" id="scoreNumber" style="color:#2563eb;">0</div>
+                        <div>
+                            <span id="statusBadge" class="aqi-badge aqi-unknown">Unknown</span>
+                            <div class="score-label" style="margin-top:4px;">AQI Score</div>
+                        </div>
+                    </div>
+                    
+                    <div id="expectedRangeBox" class="hide" style="margin-top:-10px; margin-bottom:15px; font-size:0.85rem; font-weight:600; color:#4b5563;">
+                        Expected Range: <span id="rangeMin" style="color:#1a1a2e;"></span> – <span id="rangeMax" style="color:#1a1a2e;"></span> (95% CI)
+                    </div>
+
+                    <div style="font-size:0.82rem; color:#6b7280; margin-bottom:1rem; line-height:1.5;" id="summaryText"></div>
+
+                    <!-- AI Forecast Timeline -->
+                    <div class="result-section hide" id="forecastSection">
+                        <div class="result-section-title" style="color:#2563eb;"><i class="bi bi-clock-history"></i> AI Forecast Timeline</div>
+                        <div style="display:flex; justify-content:space-between; text-align:center; margin-top:10px; background:#f9fafb; padding:12px; border-radius:10px; border:1px solid #e5e7eb;">
+                            <div><div style="font-size:0.65rem; font-weight:700; color:#6b7280; text-transform:uppercase;">+1 Hour</div><div id="fcst1" style="font-weight:800; font-size:1.15rem; color:#1a1a2e; margin-top:2px;">-</div></div>
+                            <div><div style="font-size:0.65rem; font-weight:700; color:#6b7280; text-transform:uppercase;">+6 Hours</div><div id="fcst6" style="font-weight:800; font-size:1.15rem; color:#1a1a2e; margin-top:2px;">-</div></div>
+                            <div><div style="font-size:0.65rem; font-weight:700; color:#6b7280; text-transform:uppercase;">+12 Hours</div><div id="fcst12" style="font-weight:800; font-size:1.15rem; color:#1a1a2e; margin-top:2px;">-</div></div>
+                            <div><div style="font-size:0.65rem; font-weight:700; color:#6b7280; text-transform:uppercase;">+24 Hours</div><div id="fcst24" style="font-weight:800; font-size:1.15rem; color:#1a1a2e; margin-top:2px;">-</div></div>
+                        </div>
+                    </div>
+
+                    <!-- SHAP Explainability -->
+                    <div class="result-section hide" id="explainSection">
+                        <div class="result-section-title" style="color:#7c3aed;"><i class="bi bi-magic"></i> Prediction Drivers (SHAP)</div>
+                        <div id="shapBars" style="margin-top:12px; display:flex; flex-direction:column; gap:10px;"></div>
+                    </div>
+
+                    <!-- AI Health Risk Assessment -->
+                    <div class="result-section hide" id="healthPillsSection">
+                        <div class="result-section-title" style="color:#dc2626;"><i class="bi bi-heart-pulse"></i> Health Risk Intelligence</div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px;" id="healthRiskGrid"></div>
+                    </div>
+
+                    <div class="result-section">
+                        <div class="result-section-title" style="color:#dc2626;"><i class="bi bi-heart-pulse"></i> Health Risks</div>
+                        <ul class="result-list" id="healthRisks"></ul>
+                    </div>
+                    <div class="result-section">
+                        <div class="result-section-title" style="color:#ea580c;"><i class="bi bi-exclamation-triangle"></i> Precautions</div>
+                        <ul class="result-list" id="precautions"></ul>
+                    </div>
+                    <div class="result-section">
+                        <div class="result-section-title" style="color:#16a34a;"><i class="bi bi-check-circle"></i> Recommendations</div>
+                        <ul class="result-list" id="recommendations"></ul>
+                    </div>
+
+                    <div class="result-section" style="border-top-color:#f3f4f6;">
+                        <div style="font-size:0.75rem; color:#9ca3af;" id="modelInfo"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById("form");
+        const modeInput = document.getElementById("modeInput");
+        const simpleSection = document.getElementById("simpleSection");
+        const advancedSection = document.getElementById("advancedSection");
+        const simpleBtn = document.getElementById("simpleBtn");
+        const advancedBtn = document.getElementById("advancedBtn");
+        const submitBtn = document.getElementById("submitBtn");
+        const emptyState = document.getElementById("emptyState");
+        const resultBox = document.getElementById("resultBox");
+        const errorBox = document.getElementById("errorBox");
+
+        let isLoggedIn = false;
+
+        function setMode(mode) {
+            const isAdv = mode === "advanced";
+            modeInput.value = mode;
+            simpleSection.classList.toggle("hide", isAdv);
+            advancedSection.classList.toggle("hide", !isAdv);
+            simpleBtn.classList.toggle("active", !isAdv);
+            advancedBtn.classList.toggle("active", isAdv);
+            document.getElementById("state").required = !isAdv;
+
+            // Show login prompt or expert form based on auth state
+            if (isAdv) {
+                document.getElementById("expertLoginPrompt").classList.toggle("hide", isLoggedIn);
+                document.getElementById("expertForm").classList.toggle("hide", !isLoggedIn);
+                submitBtn.classList.toggle("hide", !isLoggedIn);
+            } else {
+                submitBtn.classList.remove("hide");
+            }
+        }
+
+        function fillList(el, items) {
+            el.innerHTML = "";
+            (Array.isArray(items) ? items : []).forEach(txt => {
+                const li = document.createElement("li");
+                li.textContent = txt;
+                el.appendChild(li);
+            });
+        }
+
+        function getAqiBadgeClass(status) {
+            const s = String(status || "").toLowerCase();
+            if (s.includes("good")) return "aqi-good";
+            if (s.includes("satisfactory")) return "aqi-satisfactory";
+            if (s.includes("severe")) return "aqi-severe";
+            if (s.includes("very poor")) return "aqi-very-poor";
+            if (s.includes("poor")) return "aqi-poor";
+            if (s.includes("moderate")) return "aqi-moderate";
+            return "aqi-unknown";
+        }
+
+        function getScoreColor(score) {
+            if (score <= 50) return "#16a34a";
+            if (score <= 100) return "#ca8a04";
+            if (score <= 200) return "#ea580c";
+            if (score <= 300) return "#dc2626";
+            return "#7c3aed";
+        }
+
+        simpleBtn.addEventListener("click", () => setMode("simple"));
+        advancedBtn.addEventListener("click", () => setMode("advanced"));
+
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            errorBox.style.display = "none";
+            emptyState.classList.remove("hide");
+            resultBox.classList.add("hide");
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Fetching live data…';
+
+            const data = new FormData(form);
+            const payload = {};
+            data.forEach((v, k) => { payload[k] = v.trim(); });
+            payload.mode = modeInput.value;
+
+            // In advanced mode, merge the stateAdv field as state
+            if (payload.mode === "advanced" && payload.stateAdv) {
+                payload.state = payload.stateAdv;
+            }
+
+            try {
+                const res = await fetch("/predict", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "Accept": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                const ct = res.headers.get("content-type") || "";
+                const json = ct.includes("json") ? await res.json() : { success: false, message: await res.text() };
+
+                if (!res.ok || !json.success) {
+                    const err = new Error(json.message || "Prediction failed.");
+                    err.requiresLogin = !!json.requiresLogin;
+                    throw err;
+                }
+
+
+                const result = json.result || {};
+                const advice = json.advice || {};
+                const location = json.location || {};
+
+                // Location title
+                const parts = [location.city, location.place, location.state].filter(Boolean);
+                document.getElementById("locationTitle").textContent = parts.length ? parts.join(", ") : "Selected location";
+
+                // Score
+                const score = result.aqiScore ?? 0;
+                const scoreEl = document.getElementById("scoreNumber");
+                scoreEl.textContent = score;
+                scoreEl.style.color = getScoreColor(score);
+
+                // Badge
+                const badge = document.getElementById("statusBadge");
+                badge.textContent = result.aqiStatus || "Unknown";
+                badge.className = `aqi-badge ${getAqiBadgeClass(result.aqiStatus)}`;
+
+                // Source chip
+                const chip = document.getElementById("sourceChip");
+                if (result.source === "real-time-api") {
+                    chip.innerHTML = '<i class="bi bi-broadcast"></i> Live data';
+                    chip.className = 'source-chip source-real';
+                } else if (result.source === "trained-ml-model") {
+                    chip.innerHTML = '<i class="bi bi-robot"></i> AI Model';
+                    chip.className = 'source-chip source-real'; // Reuse style or add custom
+                } else {
+                    chip.innerHTML = '<i class="bi bi-cpu"></i> Heuristic';
+                    chip.className = 'source-chip source-fallback';
+                }
+
+                // Summary / Explanation
+                document.getElementById("summaryText").textContent = result.explanation || advice.summary || "";
+
+                // Forecasts
+                if (result.forecasts && Object.keys(result.forecasts).length > 0) {
+                    document.getElementById("forecastSection").classList.remove("hide");
+                    document.getElementById("fcst1").textContent = result.forecasts["+1h"] ?? "-";
+                    document.getElementById("fcst6").textContent = result.forecasts["+6h"] ?? "-";
+                    document.getElementById("fcst12").textContent = result.forecasts["+12h"] ?? "-";
+                    document.getElementById("fcst24").textContent = result.forecasts["+24h"] ?? "-";
+                } else {
+                    document.getElementById("forecastSection").classList.add("hide");
+                }
+
+                // Expected Range
+                if (result.expectedRange) {
+                    document.getElementById("expectedRangeBox").classList.remove("hide");
+                    document.getElementById("rangeMin").textContent = result.expectedRange.min;
+                    document.getElementById("rangeMax").textContent = result.expectedRange.max;
+                } else {
+                    document.getElementById("expectedRangeBox").classList.add("hide");
+                }
+
+                // SHAP Bars
+                const shapContainer = document.getElementById("shapBars");
+                if (result.topFactors && result.topFactors.length > 0 && result.source === "trained-ml-model") {
+                    document.getElementById("explainSection").classList.remove("hide");
+                    shapContainer.innerHTML = "";
+                    result.topFactors.forEach(factor => {
+                        const w = Math.max(5, factor.importance);
+                        shapContainer.innerHTML += `
+                            <div style="display:flex; align-items:center; gap:10px; font-size:0.75rem; font-weight:600;">
+                                <div style="width:50px; text-align:right; color:#4b5563; text-transform:uppercase;">${factor.feature}</div>
+                                <div style="flex:1; background:#f3f4f6; border-radius:10px; height:12px; overflow:hidden;">
+                                    <div style="width:${w}%; background:linear-gradient(90deg, #3b82f6, #8b5cf6); height:100%; border-radius:10px;"></div>
+                                </div>
+                                <div style="width:35px; text-align:left; color:#6b7280;">${factor.importance}%</div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    document.getElementById("explainSection").classList.add("hide");
+                }
+
+                // Health Risk Intelligence
+                const riskGrid = document.getElementById("healthRiskGrid");
+                if (result.healthRisks) {
+                    document.getElementById("healthPillsSection").classList.remove("hide");
+                    riskGrid.innerHTML = "";
+                    const riskColors = {
+                        "Safe": "#dcfce7", "Low": "#dcfce7",
+                        "Moderate": "#fef9c3", "Caution": "#fef9c3",
+                        "High": "#ffedd5", "Unsafe": "#ffedd5",
+                        "Very High": "#fee2e2", "Dangerous": "#fee2e2", "Extreme": "#f3e8ff"
+                    };
+                    const riskTextColors = {
+                        "Safe": "#15803d", "Low": "#15803d",
+                        "Moderate": "#854d0e", "Caution": "#854d0e",
+                        "High": "#c2410c", "Unsafe": "#c2410c",
+                        "Very High": "#dc2626", "Dangerous": "#dc2626", "Extreme": "#6d28d9"
+                    };
+                    for (const [key, level] of Object.entries(result.healthRisks)) {
+                        const bg = riskColors[level] || "#f3f4f6";
+                        const tc = riskTextColors[level] || "#4b5563";
+                        const label = key.charAt(0).toUpperCase() + key.slice(1);
+                        riskGrid.innerHTML += `
+                            <div style="background:${bg}; color:${tc}; padding:8px 12px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+                                <span style="font-size:0.75rem; font-weight:600;">${label}</span>
+                                <span style="font-size:0.75rem; font-weight:800;">${level}</span>
+                            </div>
+                        `;
+                    }
+                } else {
+                    document.getElementById("healthPillsSection").classList.add("hide");
+                }
+
+                // Lists
+                fillList(document.getElementById("healthRisks"), advice.healthRisks);
+                fillList(document.getElementById("precautions"), advice.precautions);
+                fillList(document.getElementById("recommendations"), advice.recommendations);
+
+                // Model info — hide confidence % for live sensor data, show it only for AI predictions
+                const isLiveDataFlag = result.isLiveData === true;
+                document.getElementById("modelInfo").textContent = isLiveDataFlag
+                    ? `${result.modelName || "Live Sensor Data"} · Realtime · ${advice.nextCheck || ""}`
+                    : `${result.modelName || ""} · AI Confidence: ${result.confidence ?? 0}% · ${advice.nextCheck || ""}`;
+
+                emptyState.classList.add("hide");
+                resultBox.classList.remove("hide");
+            } catch (err) {
+                // If the server says login is required, show inline prompt instead of generic error
+                if (err.requiresLogin) {
+                    errorBox.innerHTML = `
+                        <strong>🔒 Login required for Expert Mode.</strong><br>
+                        <a href="/signup" style="color:#dc2626; font-weight:700;">Create a free account</a> or
+                        <a href="/login" style="color:#dc2626; font-weight:700;">log in</a> to use AI-powered prediction.
+                    `;
+                } else {
+                    errorBox.textContent = err.message || "Something went wrong. Please try again.";
+                }
+                errorBox.style.display = "block";
+                emptyState.classList.remove("hide");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="bi bi-search"></i> Get Live AQI';
+            }
+        });
+
+        // Detect login state and render nav + expert mode UI
+        (async () => {
+            const navRight = document.getElementById("navRight");
+            try {
+                const meRes = await fetch("/api/me");
+                const me = await meRes.json();
+                if (me.success && me.user) {
+                    isLoggedIn = true;
+                    navRight.innerHTML = `
+                        <a href="/dashboard" class="btn-nav btn-nav-ghost"><i class="bi bi-speedometer2"></i> Dashboard</a>
+                        <a href="/logout" class="btn-nav btn-nav-danger"><i class="bi bi-box-arrow-right"></i> Logout</a>
+                    `;
+                } else {
+                    navRight.innerHTML = `
+                        <a href="/login" class="btn-nav btn-nav-ghost"><i class="bi bi-box-arrow-in-right"></i> Login</a>
+                        <a href="/signup" class="btn-nav" style="background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;border-radius:8px;padding:0.4rem 0.9rem;font-size:0.82rem;font-weight:600;text-decoration:none;">Sign Up Free</a>
+                    `;
+                }
+            } catch (_) {
+                navRight.innerHTML = `<a href="/login" class="btn-nav btn-nav-ghost">Login</a>`;
+            }
+            setMode(modeInput.value || "simple");
+        })();
+    </script>
+</body>
+</html>

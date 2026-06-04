@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login • CleanAir Insights</title>
+    <meta name="description" content="Log in to CleanAir Insights to check real-time air quality for any Indian state." />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        body { margin: 0; padding: 0; font-family: 'Inter', sans-serif; background: #f0f4f8; min-height: 100vh; display: flex; flex-direction: column; }
+        .auth-wrapper { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem 1rem; }
+        .auth-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+        }
+        .brand-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 2rem; text-decoration: none; color: #1a1a2e; }
+        .brand-mark-sm { background: linear-gradient(135deg, #2563eb, #7c3aed); color: #fff; font-weight: 700; font-size: 0.8rem; padding: 4px 8px; border-radius: 6px; letter-spacing: 1px; }
+        .brand-name { font-weight: 700; font-size: 1.1rem; }
+        .auth-title { font-size: 1.6rem; font-weight: 700; color: #1a1a2e; margin-bottom: 0.25rem; }
+        .auth-sub { color: #6b7280; font-size: 0.9rem; margin-bottom: 2rem; }
+        .input-group-custom label { font-weight: 500; font-size: 0.85rem; color: #374151; margin-bottom: 0.4rem; display: block; }
+        .input-group-custom input {
+            width: 100%;
+            padding: 0.65rem 1rem;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.2s;
+            background: #f9fafb;
+        }
+        .input-group-custom input:focus { border-color: #2563eb; background: #fff; }
+        .btn-login {
+            width: 100%;
+            padding: 0.75rem;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s;
+            margin-top: 0.5rem;
+        }
+        .btn-login:hover { opacity: 0.92; transform: translateY(-1px); }
+        .error-msg { background: #fef2f2; border: 1px solid #fca5a5; color: #dc2626; border-radius: 8px; padding: 0.65rem 1rem; font-size: 0.85rem; display: none; margin-bottom: 1rem; }
+        .auth-footer { text-align: center; margin-top: 1.5rem; font-size: 0.85rem; color: #6b7280; }
+        .auth-footer a { color: #2563eb; text-decoration: none; font-weight: 500; }
+        .top-nav { background: #fff; border-bottom: 1px solid #e5e7eb; padding: 0.8rem 1.5rem; display: flex; align-items: center; justify-content: space-between; }
+        .nav-home { text-decoration: none; color: #6b7280; font-size: 0.85rem; display: flex; align-items: center; gap: 5px; }
+        .nav-home:hover { color: #2563eb; }
+    </style>
+</head>
+<body>
+    <nav class="top-nav">
+        <a href="/" class="brand-logo" style="margin-bottom:0;">
+            <span class="brand-mark-sm">AQ</span>
+            <span class="brand-name">CleanAir Insights</span>
+        </a>
+        <a href="/" class="nav-home"><i class="bi bi-arrow-left"></i> Back to home</a>
+    </nav>
+
+    <div class="auth-wrapper">
+        <div class="auth-card">
+            <h1 class="auth-title">Welcome back</h1>
+            <p class="auth-sub">Sign in to check real-time air quality</p>
+
+            <div class="error-msg" id="msg"></div>
+
+            <form id="form">
+                <div class="input-group-custom mb-3">
+                    <label for="email">Email address</label>
+                    <input id="email" type="email" name="email" placeholder="you@example.com" required autocomplete="email">
+                </div>
+                <div class="input-group-custom mb-4">
+                    <label for="password">Password</label>
+                    <input id="password" type="password" name="password" placeholder="Enter your password" required autocomplete="current-password">
+                </div>
+                <button class="btn-login" type="submit" id="submitBtn">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>Sign in
+                </button>
+            </form>
+
+            <div class="auth-footer">
+                Don't have an account? <a href="/signup">Create one</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById("form");
+        const msg = document.getElementById("msg");
+        const submitBtn = document.getElementById("submitBtn");
+
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            msg.style.display = "none";
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Signing in...';
+
+            const payload = {
+                email: document.getElementById("email").value.trim(),
+                password: document.getElementById("password").value
+            };
+
+            try {
+                const res = await fetch("/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    window.location.href = data.redirect;
+                    return;
+                }
+
+                msg.textContent = data.message || "Login failed. Please try again.";
+                msg.style.display = "block";
+            } catch (err) {
+                msg.textContent = "Network error. Please try again.";
+                msg.style.display = "block";
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="bi bi-box-arrow-in-right me-2"></i>Sign in';
+            }
+        });
+    </script>
+</body>
+</html>
